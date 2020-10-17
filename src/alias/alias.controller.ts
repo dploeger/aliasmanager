@@ -1,10 +1,12 @@
 import {
   BadRequestException,
   Body,
+  ConflictException,
   Controller,
   Delete,
   Get,
   HttpCode,
+  InternalServerErrorException,
   NotFoundException,
   Param,
   Post,
@@ -18,70 +20,107 @@ import { ApiBearerAuth, ApiBody } from '@nestjs/swagger';
 import { AliasAlreadyExistsError } from '../errors/alias-already-exists.error';
 import { AliasDoesNotExistError } from '../errors/alias-does-not-exist.error';
 import { AccountService } from '../account/account.service';
+import { IncomingMessage } from 'http';
+import { Request } from 'express';
+import { AccountInvalidError } from '../errors/account-invalid.error';
 
-@Controller('api/account/:username')
+@Controller('api/account/alias')
 export class AliasController {
   constructor(private accountService: AccountService) {}
 
-  @Get('alias')
+  @Get()
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard)
-  async getAliases(@Param() params, @Req() request): Promise<AliasDto[]> {
-    return await this.accountService.getAliases(
-      params.username,
-      request.query.filter,
-    );
+  async getAliases(
+    @Param() params,
+    @Req() request: Request,
+  ): Promise<AliasDto[]> {
+    try {
+      return await this.accountService.getAliases(
+        (request.user as any).username,
+        request.query.filter as string,
+      );
+    } catch (e) {
+      switch (e.name) {
+        case AccountInvalidError.NAME:
+          throw new BadRequestException(e.message);
+        default:
+          throw new InternalServerErrorException(e.message);
+      }
+    }
   }
 
-  @Post('alias')
+  @Post()
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard)
   @ApiBody({ type: AliasDto })
   async createAlias(
     @Body() alias: AliasDto,
-    @Param() params,
+    @Req() request: Request,
   ): Promise<AliasDto> {
     try {
-      return await this.accountService.createAlias(params.username, alias);
+      return await this.accountService.createAlias(
+        (request.user as any).username,
+        alias,
+      );
     } catch (e) {
       switch (e.name) {
-        case AliasAlreadyExistsError.NAME:
+        case (AccountInvalidError.NAME, AliasAlreadyExistsError.NAME):
           throw new BadRequestException(e.message);
+        default:
+          throw new InternalServerErrorException(e.message);
       }
     }
   }
 
-  @Put('alias/:address')
+  @Put(':address')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiBody({ type: AliasDto })
-  @HttpCode(204)
-  async updateAlias(@Body() alias: AliasDto, @Param() params) {
+  @HttpCode(201)
+  async updateAlias(
+    @Body() alias: AliasDto,
+    @Req() request: Request,
+    @Param() params,
+  ) {
     try {
-      await this.accountService.updateAlias(
-        params.username,
+      return await this.accountService.updateAlias(
+        (request.user as any).username,
         params.address,
         alias,
       );
     } catch (e) {
       switch (e.name) {
+        case AccountInvalidError.NAME:
+          throw new BadRequestException(e.message);
+        case AliasAlreadyExistsError.NAME:
+          throw new ConflictException(e.message);
         case AliasDoesNotExistError.NAME:
           throw new NotFoundException(e.message);
+        default:
+          throw new InternalServerErrorException(e.message);
       }
     }
   }
 
-  @Delete('alias/:address')
+  @Delete(':address')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @HttpCode(204)
-  async deleteAlias(@Param() params): Promise<void> {
+  async deleteAlias(@Param() params, @Req() request: Request): Promise<void> {
     try {
-      await this.accountService.deleteAlias(params.username, params.address);
+      await this.accountService.deleteAlias(
+        (request.user as any).username,
+        params.address,
+      );
     } catch (e) {
       switch (e.name) {
+        case AccountInvalidError.NAME:
+          throw new BadRequestException(e.message);
         case AliasDoesNotExistError.NAME:
           throw new NotFoundException(e.message);
+        default:
+          throw new InternalServerErrorException(e.message);
       }
     }
   }

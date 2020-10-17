@@ -5,7 +5,7 @@ export class AliasAlreadyExistsError extends Error {
   public static readonly NAME = 'AliasAlreadyExistsError';
 
   constructor(username: string, newAlias: AliasDto) {
-    const message = `${username} already has an alias for address ${newAlias.address}`;
+    const message = `User ${username} already has an alias for address ${newAlias.address}`;
     winston.error(message);
     super(message);
     this.name = AliasAlreadyExistsError.NAME;
