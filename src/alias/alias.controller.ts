@@ -20,7 +20,6 @@ import { ApiBearerAuth, ApiBody } from '@nestjs/swagger';
 import { AliasAlreadyExistsError } from '../errors/alias-already-exists.error';
 import { AliasDoesNotExistError } from '../errors/alias-does-not-exist.error';
 import { AccountService } from '../account/account.service';
-import { IncomingMessage } from 'http';
 import { Request } from 'express';
 import { AccountInvalidError } from '../errors/account-invalid.error';
 
@@ -41,10 +40,13 @@ export class AliasController {
         request.query.filter as string,
       );
     } catch (e) {
+      /* istanbul ignore next */
       switch (e.name) {
         case AccountInvalidError.NAME:
+          /* istanbul ignore next */
           throw new BadRequestException(e.message);
         default:
+          /* istanbul ignore next */
           throw new InternalServerErrorException(e.message);
       }
     }
@@ -68,6 +70,7 @@ export class AliasController {
         case (AccountInvalidError.NAME, AliasAlreadyExistsError.NAME):
           throw new BadRequestException(e.message);
         default:
+          /* istanbul ignore next */
           throw new InternalServerErrorException(e.message);
       }
     }
@@ -92,12 +95,14 @@ export class AliasController {
     } catch (e) {
       switch (e.name) {
         case AccountInvalidError.NAME:
+          /* istanbul ignore next */
           throw new BadRequestException(e.message);
         case AliasAlreadyExistsError.NAME:
           throw new ConflictException(e.message);
         case AliasDoesNotExistError.NAME:
           throw new NotFoundException(e.message);
         default:
+          /* istanbul ignore next */
           throw new InternalServerErrorException(e.message);
       }
     }
@@ -116,10 +121,12 @@ export class AliasController {
     } catch (e) {
       switch (e.name) {
         case AccountInvalidError.NAME:
+          /* istanbul ignore next */
           throw new BadRequestException(e.message);
         case AliasDoesNotExistError.NAME:
           throw new NotFoundException(e.message);
         default:
+          /* istanbul ignore next */
           throw new InternalServerErrorException(e.message);
       }
     }
