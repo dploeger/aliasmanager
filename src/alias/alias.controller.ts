@@ -40,7 +40,7 @@ export class AliasController {
   async createAlias(
     @Body() alias: AliasDto,
     @Param() params,
-  ): Promise<AliasDto[]> {
+  ): Promise<AliasDto> {
     try {
       return await this.accountService.createAlias(params.username, alias);
     } catch (e) {
