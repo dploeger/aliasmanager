@@ -56,7 +56,7 @@ describe('AccountService', () => {
 
   it('should throw when giving a non existent user', async () => {
     try {
-      const aliases = await service.getAliases('unknown');
+      await service.getAliases('unknown');
     } catch (e) {
       expect(e.name).toEqual(AccountInvalidError.NAME);
     }
