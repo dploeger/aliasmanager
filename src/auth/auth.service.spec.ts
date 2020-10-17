@@ -1,9 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { AuthService } from './auth.service';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { AuthModule } from './auth.module';
 import { JwtModule, JwtService } from '@nestjs/jwt';
-import { TokenDto } from '../dto/token.dto';
 import { setupLogger } from '../../test/setup-logger';
 import { Configuration } from '../configuration';
 
