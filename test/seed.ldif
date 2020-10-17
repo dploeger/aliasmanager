@@ -1,0 +1,14 @@
+dn: cn=user,dc=example,dc=com
+objectClass: inetOrgPerson
+objectClass: organizationalPerson
+objectClass: person
+objectClass: top
+cn: user
+sn: user
+destinationIndicator: user.mail
+givenName: Example
+mail: user@example.com
+registeredAddress: alias1.user@example.com
+uid: user
+userPassword:: e1NTSEF9WDk1REgyalpTSVdFVkc4RjRnR3NzTE1uRHpXZTM5YXdPUHkzOUE9PQ==
+
