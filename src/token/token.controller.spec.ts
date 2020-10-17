@@ -30,7 +30,7 @@ describe('Token Controller', () => {
                 AM_LDAP_USER_ATTR: 'uid',
                 AM_LDAP_ALIAS_ATTR: 'registeredAddress',
                 AM_CRYPTO_JWT_SECRET: 'secret',
-                AM_CRYPTO_JWT_EXPIRES: '60',
+                AM_CRYPTO_JWT_EXPIRES: '60s',
               };
             },
           ],
