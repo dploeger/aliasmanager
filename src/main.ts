@@ -2,9 +2,36 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ValidationPipe } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import * as winston from 'winston';
+import * as logform from 'logform';
+import { LoggerService } from './logger/logger.service';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  winston.configure({
+    transports: [new winston.transports.Console()],
+    format: logform.format.combine(
+      logform.format.timestamp(),
+      logform.format.printf(info => {
+        return `${info.timestamp} [${info.level.toUpperCase()}] ${
+          info.message
+        }`;
+      }),
+    ),
+  });
+
+  const app = await NestFactory.create(AppModule, {
+    logger: new LoggerService(),
+  });
+  const configService = app.get<ConfigService>(ConfigService);
+
+  // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
+  // @ts-ignore
+  winston.level = configService.get('AM_LOGLEVEL');
+
+  winston.info('Starting aliasmanager');
+
+  winston.info('Creating OpenApi endpoint');
   const options = new DocumentBuilder()
     .setTitle('AliasManager API')
     .setDescription('The API for the AliasManager')
@@ -16,7 +43,9 @@ async function bootstrap() {
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
   SwaggerModule.setup('api', app, document);
 
-  await app.listen(3000);
+  const port = configService.get('AM_PORT');
+  winston.info(`Starting service on port ${port}`);
+  await app.listen(port);
 }
 
 bootstrap();

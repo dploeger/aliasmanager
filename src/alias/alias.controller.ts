@@ -15,13 +15,27 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
-import { AliasDto } from '../dto/alias.dto';
-import { ApiBearerAuth, ApiBody } from '@nestjs/swagger';
+import { Alias } from './alias';
+import {
+  ApiBadRequestResponse,
+  ApiBearerAuth,
+  ApiBody,
+  ApiConflictResponse,
+  ApiCreatedResponse,
+  ApiInternalServerErrorResponse,
+  ApiNoContentResponse,
+  ApiNotFoundResponse,
+  ApiOkResponse,
+  ApiOperation,
+  ApiParam,
+  ApiQuery,
+} from '@nestjs/swagger';
 import { AliasAlreadyExistsError } from '../errors/alias-already-exists.error';
 import { AliasDoesNotExistError } from '../errors/alias-does-not-exist.error';
 import { AccountService } from '../account/account.service';
 import { Request } from 'express';
 import { AccountInvalidError } from '../errors/account-invalid.error';
+import { Error } from '../errors/error';
 
 @Controller('api/account/alias')
 export class AliasController {
@@ -29,11 +43,26 @@ export class AliasController {
 
   @Get()
   @ApiBearerAuth()
+  @ApiBadRequestResponse({
+    description: 'An invalid account was specified',
+    type: Error,
+  })
+  @ApiInternalServerErrorResponse({
+    description: 'Unexpected internal error',
+    type: Error,
+  })
+  @ApiOkResponse({
+    description: 'The list of matching aliases',
+    type: [Alias],
+  })
+  @ApiQuery({
+    name: 'filter',
+    description: 'A filter value to match aliases to',
+    required: false,
+  })
   @UseGuards(JwtAuthGuard)
-  async getAliases(
-    @Param() params,
-    @Req() request: Request,
-  ): Promise<AliasDto[]> {
+  @ApiOperation({ summary: 'Fetch all aliases or a filtered list' })
+  async getAliases(@Param() params, @Req() request: Request): Promise<Alias[]> {
     try {
       return await this.accountService.getAliases(
         (request.user as any).username,
@@ -55,11 +84,28 @@ export class AliasController {
   @Post()
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard)
-  @ApiBody({ type: AliasDto })
+  @ApiBody({ type: Alias, description: 'The alias to be created' })
+  @ApiInternalServerErrorResponse({
+    description: 'Unexpected internal error',
+    type: Error,
+  })
+  @ApiCreatedResponse({
+    description: 'The token was created successfully',
+    type: Alias,
+  })
+  @ApiBadRequestResponse({
+    description: 'An invalid account was specified',
+    type: Error,
+  })
+  @ApiConflictResponse({
+    description: 'The given alias already exists',
+    type: Error,
+  })
+  @ApiOperation({ summary: 'Create a new alias' })
   async createAlias(
-    @Body() alias: AliasDto,
+    @Body() alias: Alias,
     @Req() request: Request,
-  ): Promise<AliasDto> {
+  ): Promise<Alias> {
     try {
       return await this.accountService.createAlias(
         (request.user as any).username,
@@ -67,8 +113,10 @@ export class AliasController {
       );
     } catch (e) {
       switch (e.name) {
-        case (AccountInvalidError.NAME, AliasAlreadyExistsError.NAME):
+        case AccountInvalidError.NAME:
           throw new BadRequestException(e.message);
+        case AliasAlreadyExistsError.NAME:
+          throw new ConflictException(e.message);
         default:
           /* istanbul ignore next */
           throw new InternalServerErrorException(e.message);
@@ -79,10 +127,34 @@ export class AliasController {
   @Put(':address')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  @ApiBody({ type: AliasDto })
-  @HttpCode(201)
+  @ApiBody({ type: Alias, description: 'The new alias' })
+  @ApiParam({
+    name: 'address',
+    description: 'The alias to change',
+  })
+  @ApiInternalServerErrorResponse({
+    description: 'Unexpected internal error',
+    type: Error,
+  })
+  @ApiCreatedResponse({
+    description: 'The token was created successfully',
+    type: Alias,
+  })
+  @ApiBadRequestResponse({
+    description: 'An invalid account was specified',
+    type: Error,
+  })
+  @ApiNotFoundResponse({
+    description: 'The given alias to change was not found',
+    type: Error,
+  })
+  @ApiConflictResponse({
+    description: 'The given alias already exists',
+    type: Error,
+  })
+  @ApiOperation({ summary: 'Update an alias' })
   async updateAlias(
-    @Body() alias: AliasDto,
+    @Body() alias: Alias,
     @Req() request: Request,
     @Param() params,
   ) {
@@ -112,6 +184,26 @@ export class AliasController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @HttpCode(204)
+  @ApiParam({
+    name: 'address',
+    description: 'The alias to delete',
+  })
+  @ApiNoContentResponse({
+    description: 'The alias was deleted successfully',
+  })
+  @ApiBadRequestResponse({
+    description: 'An invalid account was specified',
+    type: Error,
+  })
+  @ApiNotFoundResponse({
+    description: 'The given alias to change was not found',
+    type: Error,
+  })
+  @ApiInternalServerErrorResponse({
+    description: 'Unexpected internal error',
+    type: Error,
+  })
+  @ApiOperation({ summary: 'Delete an alias' })
   async deleteAlias(@Param() params, @Req() request: Request): Promise<void> {
     try {
       await this.accountService.deleteAlias(

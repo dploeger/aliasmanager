@@ -1,75 +1,109 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo_text.svg" width="320" alt="Nest Logo" /></a>
-</p>
+# Aliasmanager
 
-[travis-image]: https://api.travis-ci.org/nestjs/nest.svg?branch=master
-[travis-url]: https://travis-ci.org/nestjs/nest
-[linux-image]: https://img.shields.io/travis/nestjs/nest/master.svg?label=linux
-[linux-url]: https://travis-ci.org/nestjs/nest
-  
-  <p align="center">A progressive <a href="http://nodejs.org" target="blank">Node.js</a> framework for building efficient and scalable server-side applications, heavily inspired by <a href="https://angular.io" target="blank">Angular</a>.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore"><img src="https://img.shields.io/npm/dm/@nestjs/core.svg" alt="NPM Downloads" /></a>
-<a href="https://travis-ci.org/nestjs/nest"><img src="https://api.travis-ci.org/nestjs/nest.svg?branch=master" alt="Travis" /></a>
-<a href="https://travis-ci.org/nestjs/nest"><img src="https://img.shields.io/travis/nestjs/nest/master.svg?label=linux" alt="Linux" /></a>
-<a href="https://coveralls.io/github/nestjs/nest?branch=master"><img src="https://coveralls.io/repos/github/nestjs/nest/badge.svg?branch=master#5" alt="Coverage" /></a>
-<a href="https://gitter.im/nestjs/nestjs?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=body_badge"><img src="https://badges.gitter.im/nestjs/nestjs.svg" alt="Gitter" /></a>
-<a href="https://opencollective.com/nest#backer"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec"><img src="https://img.shields.io/badge/Donate-PayPal-dc3d53.svg"/></a>
-  <a href="https://twitter.com/nestframework"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## About the project
 
-## Description
+The Aliasmanager consists of a Frontend and an API-Server that manages 
+specific attributes in an LDAP server.
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+When integrated in an MTA (like Postfix), these attributes can be used
+as aliases for the main E-Mail address.
 
-## Installation
+## Introduction
 
-```bash
-$ npm install
+This repository holds the API-Server for the Aliasmanager based on 
+[Nest](https://nestsjs.com).
+
+The frontend based on [Vuejs](https://vuejs.org) can be found at
+https://github.com/dploeger/aliasmanager-client.
+
+The API-Server mostly consists of a login endpoint, that generates
+a JWT token and an account endpoint that provides CRUD operations
+for the specific aliases.
+
+It requires a connection to an existing LDAP-Server that it can 
+manage.
+
+## Running the backend
+
+The whole project is meant to be run through docker. Please check out
+[the aliasmanager-docker repository](https://github.com/dploger/aliasmanager-docker)
+for details.
+
+## Configuration
+
+The API-Server has to be configured using environment variables. The
+following variables are supported:
+
+* AM_PORT: Port the API service should listen to [3000]
+* AM_LOGLEVEL: Maximum log level. Valid values are: error, warn, info, http, verbose, debug, silly [info]
+* AM_CRYPTO_JWT_SECRET: The secret that is used to sign the JWT tokens.
+  Be sure to use a long and complex string for that and keep it
+  absolutely secret. (Aliasmanager only accepts secrets >= 64 characters)
+* AM_CRYPTO_JWT_EXPIRES: The time string that specifies how long the JWT
+  token is valid. Use something like "60s", "3h", "2d", etc. [30m]
+* AM_LDAP_URL: The LDAP connection URL used to connect to the backend
+  LDAP server
+* AM_LDAP_BIND_DN: The DN of the user used to bind to the LDAP server.
+  The user needs to have permissions to alter (add/delete) attributes for
+  any account it should manage 
+* AM_LDAP_BIND_PW: The password of the bind user
+* AM_LDAP_USER_DN: The base dn where to find user accounts
+* AM_LDAP_USER_ATTR: The attribute identifiying a user [uid]
+* AM_LDAP_ALIAS_ATTR:  The attribute that should be used for aliases [registeredAddress]
+
+## Usage
+
+The main idea behind the Aliasmanager project is that an LDAP server
+is included into an MTA to lookup alias address and know where
+to deliver mails for these aliases.
+
+### Postfix
+
+To setup this in Postfix, create an LDAP configuration file like this:
+
+```
+server_host = ldaps://ldap.company.com:636
+version = 3
+bind = yes
+bind_dn = cn=aliasadmin,dc=company,dc=com
+bind_pw = verysecretpassword
+search_base = dc=company,dc=com
+query_filter = registeredAddress=%s
+result_attribute = destinationIndicator
 ```
 
-## Running the app
+and refer to this file in the `main.cf` property `virtual_alias_maps`:
 
-```bash
-# development
-$ npm run start
+    virtual_alias_maps = ldap:/etc/postfix/virtual-ldap.cf
 
-# watch mode
-$ npm run start:dev
+This would securely connect to the LDAP server ldap.company.com, 
+look for the alias using the attribute `registeredAddress`. When found,
+it would use the attribute `destinationIndicator` to route the mails
+to. (The content of `destinationIndicator` correspond to entries
+in a postfix [virtual map](http://www.postfix.org/VIRTUAL_README.html))
 
-# production mode
-$ npm run start:prod
-```
+For more details about LDAP for postfix, check out the 
+[Postfix LDAP guide](http://www.postfix.org/LDAP_README.html).
 
-## Test
+# Development
 
-```bash
-# unit tests
-$ npm run test
+If you want to contribute to this project, that is awesome!
 
-# e2e tests
-$ npm run test:e2e
+Please create an issue for the project first describing the bug
+you found or the feature youd like to implement.
 
-# test coverage
-$ npm run test:cov
-```
+If youre up for it, create a pull request after that.
 
-## Support
+This project aims to be fully tested and includes unit and e2e-tests
+in jest/supertest formats (check out the _spec.ts files).
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+So please work in a test driven development way by 
+adding a test to the respective test suite first showing the bug 
+or feature youd like to solve/implement and run the test suite. 
 
-## Stay in touch
+The test should fail.
 
-- Author - [Kamil Myśliwiec](https://kamilmysliwiec.com)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+Then solve the bug or implement the feature until the test is green.
 
-## License
-
-  Nest is [MIT licensed](LICENSE).
+Please aim for a 100% test coverage. Ingore specific lines for test
+coverage, if that line only covers a corner case.

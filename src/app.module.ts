@@ -1,5 +1,4 @@
 import { Module } from '@nestjs/common';
-import { AppService } from './app.service';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 import { ConfigModule } from '@nestjs/config';
@@ -7,8 +6,8 @@ import { AuthModule } from './auth/auth.module';
 import { TokenController } from './token/token.controller';
 import { AccountModule } from './account/account.module';
 import * as Joi from '@hapi/joi';
-import { getHashes } from 'crypto';
 import { AliasController } from './alias/alias.controller';
+import { LoggerService } from './logger/logger.service';
 
 @Module({
   imports: [
@@ -17,38 +16,29 @@ import { AliasController } from './alias/alias.controller';
     }),
     ConfigModule.forRoot({
       validationSchema: Joi.object({
-        AM_CRYPTO_SALT: Joi.string()
-          .required()
-          .min(64),
-        AM_CRYPTO_ITERATIONS: Joi.number()
-          .default(10000)
-          .min(10000),
-        AM_CRYPTO_SIZE: Joi.number()
-          .default(80)
-          .min(80),
-        AM_CRYPTO_DIGEST: Joi.string()
-          .valid(...getHashes())
-          .default('sha256'),
+        AM_PORT: Joi.number()
+          .default(3000)
+          .greater(0)
+          .less(65536),
+        AM_LOGLEVEL: Joi.string()
+          .default('info')
+          .valid('error', 'warn', 'info', 'http', 'verbose', 'debug', 'silly'),
         AM_CRYPTO_JWT_SECRET: Joi.string()
           .required()
           .min(64),
-        AM_CRYPTO_JWT_EXPIRES: Joi.string().default('60s'),
+        AM_CRYPTO_JWT_EXPIRES: Joi.string().default('30m'),
         AM_LDAP_URL: Joi.string().required(),
         AM_LDAP_BIND_DN: Joi.string().required(),
         AM_LDAP_BIND_PW: Joi.string().required(),
         AM_LDAP_USER_DN: Joi.string().required(),
-        AM_LDAP_USER_ATTR: Joi.string()
-          .default('uid')
-          .required(),
-        AM_LDAP_ALIAS_ATTR: Joi.string()
-          .default('registeredAddress')
-          .required(),
+        AM_LDAP_USER_ATTR: Joi.string().default('uid'),
+        AM_LDAP_ALIAS_ATTR: Joi.string().default('registeredAddress'),
       }),
     }),
     AuthModule,
     AccountModule,
   ],
   controllers: [TokenController, AliasController],
-  providers: [AppService],
+  providers: [LoggerService],
 })
 export class AppModule {}

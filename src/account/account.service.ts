@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { AliasDto } from '../dto/alias.dto';
+import { Alias } from '../alias/alias';
 import { Attribute, Change, Client } from 'ldapts';
 import { AccountInvalidError } from '../errors/account-invalid.error';
 import { Entry } from 'ldapts/messages';
@@ -73,7 +73,7 @@ export class AccountService {
    * @param username User account
    * @param filter Filter to search for aliases
    */
-  async getAliases(username: string, filter = ''): Promise<AliasDto[]> {
+  async getAliases(username: string, filter = ''): Promise<Alias[]> {
     const account = await this._getAccount(username);
     let aliases = account[this._configService.get('AM_LDAP_ALIAS_ATTR')] as
       | string
@@ -96,7 +96,7 @@ export class AccountService {
    * @param username Account name
    * @param alias Alias to add
    */
-  async createAlias(username: string, alias: AliasDto): Promise<AliasDto> {
+  async createAlias(username: string, alias: Alias): Promise<Alias> {
     winston.info(`Adding ${alias.address} to user ${username}`);
     winston.info('Checking for duplicates');
     if ((await this.getAliases(username, alias.address)).length > 0) {
@@ -128,8 +128,8 @@ export class AccountService {
   async updateAlias(
     username: string,
     address: string,
-    newAlias: AliasDto,
-  ): Promise<AliasDto> {
+    newAlias: Alias,
+  ): Promise<Alias> {
     winston.info(
       `Changing ${address} to ${newAlias.address} for user ${username}`,
     );
