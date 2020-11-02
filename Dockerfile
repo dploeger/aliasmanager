@@ -1,16 +1,17 @@
-FROM node:lts as build
+FROM node:lts-alpine as build
 
-COPY . /usr/local/app
-RUN cd /usr/local/app; \
-    npm install; \
-    npm run build
+WORKDIR /usr/local/app
+COPY . .
+RUN npm install && npm run build
 
-FROM node:lts
-COPY --from=build /usr/local/app/dist /usr/local/app
-COPY --from=build /usr/local/app/package.json /usr/local/app
+FROM node:lts-alpine
 
-RUN cd /usr/local/app; \
-    npm install
+WORKDIR /usr/local/app
+
+COPY --from=build /usr/local/app/dist .
+COPY --from=build /usr/local/app/package.json .
+
+RUN npm install
 
 ENTRYPOINT ["node", "/usr/local/app/main.js"]
 

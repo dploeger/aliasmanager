@@ -1,0 +1,6 @@
+node_modules
+dist
+test
+.idea
+README.md
+LICENSE
