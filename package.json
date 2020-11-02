@@ -43,9 +43,11 @@
     "swagger-ui-express": "^4.1.4",
     "ldapts": "^2.8.1",
     "winston": "^3.3.3",
-    "logform": "^2.2.0"
+    "logform": "^2.2.0",
+    "cookie": "^0.4.1"
   },
   "devDependencies": {
+    "@types/cookie": "^0.4.0",
     "@nestjs/cli": "^7.0.0",
     "@nestjs/schematics": "^7.0.0",
     "@nestjs/testing": "^7.0.0",

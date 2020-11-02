@@ -12,4 +12,6 @@ export interface Configuration {
   AM_LDAP_USER_DN: string;
   AM_LDAP_USER_ATTR: string;
   AM_LDAP_ALIAS_ATTR: string;
+  AM_TOKEN_COOKIE: string;
+  AM_TOKEN_MAXAGE: number;
 }

@@ -1,15 +1,15 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { TokenController } from './token.controller';
 import { setupLogger } from '../../test/setup-logger';
 import { startContainer, stopContainer } from '../../test/docker-ldap';
 import { ConfigModule } from '@nestjs/config';
 import { INestApplication } from '@nestjs/common';
 import * as request from 'supertest';
 import { JwtService } from '@nestjs/jwt';
-import { AuthModule } from '../auth/auth.module';
+import { AuthModule } from './auth.module';
+import { AuthController } from './auth.controller';
 
-describe('Token Controller', () => {
-  let controller: TokenController;
+describe('Auth Controller', () => {
+  let controller: AuthController;
   let app: INestApplication;
   let module: TestingModule;
 
@@ -17,7 +17,7 @@ describe('Token Controller', () => {
     setupLogger();
     const stats = await startContainer();
     module = await Test.createTestingModule({
-      controllers: [TokenController],
+      controllers: [AuthController],
       imports: [
         ConfigModule.forRoot({
           load: [
@@ -31,6 +31,8 @@ describe('Token Controller', () => {
                 AM_LDAP_ALIAS_ATTR: 'registeredAddress',
                 AM_CRYPTO_JWT_SECRET: 'secret',
                 AM_CRYPTO_JWT_EXPIRES: '60s',
+                AM_TOKEN_COOKIE: 'token',
+                AM_TOKEN_MAXAGE: '60000',
               };
             },
           ],
@@ -39,7 +41,7 @@ describe('Token Controller', () => {
       ],
     }).compile();
 
-    controller = module.get<TokenController>(TokenController);
+    controller = module.get<AuthController>(AuthController);
     app = module.createNestApplication();
     await app.init();
   });
@@ -53,11 +55,12 @@ describe('Token Controller', () => {
     expect(controller).toBeDefined();
   });
 
-  it('should return a JWT token', () => {
+  it('should return a JWT token and a httponly cookie', () => {
     return request(app.getHttpServer())
-      .get('/api/token')
+      .get('/api/auth/login')
       .auth('user', 'password')
       .expect(200)
+      .expect('set-cookie', /token=.+; Max-Age=60;.+; HttpOnly/)
       .expect(res => {
         if (!('token' in res.body)) {
           throw new Error('Token property not found');
@@ -77,8 +80,23 @@ describe('Token Controller', () => {
 
   it('should throw on wrong credentials', () => {
     return request(app.getHttpServer())
-      .get('/api/token')
+      .get('/api/auth/login')
       .auth('user', 'wrong')
       .expect(401);
+  });
+
+  it('should remove the cookie when logging out', async () => {
+    const agent = await request.agent(app.getHttpServer());
+
+    await agent
+      .get('/api/auth/login')
+      .auth('user', 'password')
+      .expect(200)
+      .expect('set-cookie', /token=.+; Max-Age=60;.+; HttpOnly/);
+
+    return agent
+      .get('/api/auth/logout')
+      .expect(204)
+      .expect('set-cookie', /token=;.+; Expires=Thu, 01 Jan 1970 00:00:00 GMT/);
   });
 });

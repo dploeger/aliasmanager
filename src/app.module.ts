@@ -3,7 +3,6 @@ import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 import { ConfigModule } from '@nestjs/config';
 import { AuthModule } from './auth/auth.module';
-import { TokenController } from './token/token.controller';
 import { AccountModule } from './account/account.module';
 import * as Joi from '@hapi/joi';
 import { AliasController } from './alias/alias.controller';
@@ -33,12 +32,14 @@ import { LoggerService } from './logger/logger.service';
         AM_LDAP_USER_DN: Joi.string().required(),
         AM_LDAP_USER_ATTR: Joi.string().default('uid'),
         AM_LDAP_ALIAS_ATTR: Joi.string().default('registeredAddress'),
+        AM_TOKEN_COOKIE: Joi.string().default('token'),
+        AM_TOKEN_MAXAGE: Joi.number().default(1800000),
       }),
     }),
     AuthModule,
     AccountModule,
   ],
-  controllers: [TokenController, AliasController],
+  controllers: [AliasController],
   providers: [LoggerService],
 })
 export class AppModule {}

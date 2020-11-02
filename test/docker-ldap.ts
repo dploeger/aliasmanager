@@ -13,6 +13,8 @@ export async function startContainer() {
   jest.setTimeout(20000);
   winston.info('Connecting to the Docker engine');
   const docker = new Docker();
+  winston.info('Pulling image');
+  await docker.pull(CONTAINER_IMAGE);
   winston.info('Creating container');
   container = await docker.createContainer({
     Image: CONTAINER_IMAGE,
