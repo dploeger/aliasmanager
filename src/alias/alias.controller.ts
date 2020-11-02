@@ -44,7 +44,7 @@ export class AliasController {
 
   @Get()
   @ApiBearerAuth()
-  @ApiCookieAuth('token')
+  @ApiCookieAuth()
   @ApiBadRequestResponse({
     description: 'An invalid account was specified',
     type: Error,
@@ -85,7 +85,7 @@ export class AliasController {
 
   @Post()
   @ApiBearerAuth()
-  @ApiCookieAuth('token')
+  @ApiCookieAuth()
   @UseGuards(JwtAuthGuard)
   @ApiBody({ type: Alias, description: 'The alias to be created' })
   @ApiInternalServerErrorResponse({
@@ -130,7 +130,7 @@ export class AliasController {
   @Put(':address')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  @ApiCookieAuth('token')
+  @ApiCookieAuth()
   @ApiBody({ type: Alias, description: 'The new alias' })
   @ApiParam({
     name: 'address',
@@ -187,7 +187,7 @@ export class AliasController {
   @Delete(':address')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  @ApiCookieAuth('token')
+  @ApiCookieAuth()
   @HttpCode(204)
   @ApiParam({
     name: 'address',

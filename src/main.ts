@@ -37,6 +37,7 @@ async function bootstrap() {
     .setDescription('The API for the AliasManager')
     .setVersion('1.0')
     .addBasicAuth()
+    .addCookieAuth(configService.get('AM_TOKEN_COOKIE'))
     .addBearerAuth()
     .build();
   const document = SwaggerModule.createDocument(app, options);

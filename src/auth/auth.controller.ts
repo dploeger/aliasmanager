@@ -1,4 +1,4 @@
-import { Controller, Get, Req, Res, UseGuards } from '@nestjs/common';
+import { Controller, Get, HttpCode, Req, Res, UseGuards } from '@nestjs/common';
 import { LdapAuthGuard } from './ldap-auth.guard';
 import {
   ApiBasicAuth,
@@ -13,6 +13,7 @@ import { Error } from '../errors/error';
 import { AuthService } from './auth.service';
 import { Request, Response } from 'express';
 import { ConfigService } from '@nestjs/config';
+import { JwtAuthGuard } from './jwt-auth.guard';
 
 @Controller('api/auth')
 export class AuthController {
@@ -48,6 +49,8 @@ export class AuthController {
 
   @Get('logout')
   @ApiCookieAuth()
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(204)
   @ApiNoContentResponse({
     description: 'Cookie was cleaned',
   })
