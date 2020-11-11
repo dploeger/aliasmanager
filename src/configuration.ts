@@ -14,4 +14,5 @@ export interface Configuration {
   AM_LDAP_ALIAS_ATTR: string;
   AM_TOKEN_COOKIE: string;
   AM_TOKEN_MAXAGE: number;
+  AM_DEFAULT_PAGESIZE: number;
 }

@@ -37,6 +37,7 @@ import { AccountService } from '../account/account.service';
 import { Request } from 'express';
 import { AccountInvalidError } from '../errors/account-invalid.error';
 import { Error } from '../errors/error';
+import { Results } from './results';
 
 @Controller('api/account/alias')
 export class AliasController {
@@ -64,7 +65,10 @@ export class AliasController {
   })
   @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: 'Fetch all aliases or a filtered list' })
-  async getAliases(@Param() params, @Req() request: Request): Promise<Alias[]> {
+  async getAliases(
+    @Param() params,
+    @Req() request: Request,
+  ): Promise<Results<Alias>> {
     try {
       return await this.accountService.getAliases(
         (request.user as any).username,

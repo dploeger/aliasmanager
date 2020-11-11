@@ -8,6 +8,7 @@ import { Configuration } from '../configuration';
 import * as winston from 'winston';
 import { AliasAlreadyExistsError } from '../errors/alias-already-exists.error';
 import { AliasDoesNotExistError } from '../errors/alias-does-not-exist.error';
+import { Results } from '../alias/results';
 
 /**
  * Alias and account modification service
@@ -73,22 +74,42 @@ export class AccountService {
    * @param username User account
    * @param filter Filter to search for aliases
    */
-  async getAliases(username: string, filter = ''): Promise<Alias[]> {
+  async getAliases(
+    username: string,
+    filter = '',
+    page = 1,
+    pageSize = null,
+  ): Promise<Results<Alias>> {
+    if (!pageSize) {
+      pageSize = parseInt(this._configService.get('AM_DEFAULT_PAGESIZE'));
+    }
     const account = await this._getAccount(username);
     let aliases = account[this._configService.get('AM_LDAP_ALIAS_ATTR')] as
       | string
       | string[];
     if (aliases === undefined) {
-      return [];
+      return {
+        page: page,
+        pageSize: pageSize,
+        total: 0,
+        results: [],
+      };
     }
     if (!(aliases instanceof Array)) {
       aliases = [aliases];
     }
-    return aliases
+    const results = aliases
       .filter(alias => alias.match(new RegExp(`^.*${filter}.*$`)))
       .map(alias => {
         return { address: alias };
       });
+
+    return {
+      pageSize: pageSize,
+      page: page,
+      total: results.length,
+      results: results.slice((page - 1) * pageSize, page * pageSize),
+    };
   }
 
   /**
@@ -99,7 +120,7 @@ export class AccountService {
   async createAlias(username: string, alias: Alias): Promise<Alias> {
     winston.info(`Adding ${alias.address} to user ${username}`);
     winston.info('Checking for duplicates');
-    if ((await this.getAliases(username, alias.address)).length > 0) {
+    if ((await this.getAliases(username, alias.address)).total > 0) {
       throw new AliasAlreadyExistsError(username, alias);
     }
     const account = await this._getAccount(username);
@@ -134,11 +155,10 @@ export class AccountService {
       `Changing ${address} to ${newAlias.address} for user ${username}`,
     );
     winston.info('Getting existing aliases');
-    const aliases = await this.getAliases(username);
-    if (!aliases.some(alias => alias.address === address)) {
+    if ((await this.getAliases(username, address)).total === 0) {
       throw new AliasDoesNotExistError(username, address);
     }
-    if (aliases.some(alias => alias.address === newAlias.address)) {
+    if ((await this.getAliases(username, newAlias.address)).total === 1) {
       throw new AliasAlreadyExistsError(username, newAlias);
     }
     const account = await this._getAccount(username);
@@ -172,7 +192,7 @@ export class AccountService {
    */
   async deleteAlias(username: string, address: string): Promise<void> {
     winston.info(`Deleting ${address} from user ${username}`);
-    if ((await this.getAliases(username, address)).length == 0) {
+    if ((await this.getAliases(username, address)).total == 0) {
       throw new AliasDoesNotExistError(username, address);
     }
 

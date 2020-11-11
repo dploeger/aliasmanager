@@ -29,6 +29,7 @@ import { LoggerService } from './logger/logger.service';
         AM_LDAP_ALIAS_ATTR: Joi.string().default('registeredAddress'),
         AM_TOKEN_COOKIE: Joi.string().default('AM-Token'),
         AM_TOKEN_MAXAGE: Joi.number().default(1800000),
+        AM_DEFAULT_PAGESIZE: Joi.number().default(5),
       }),
     }),
     AuthModule,
