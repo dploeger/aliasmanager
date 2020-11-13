@@ -7,13 +7,22 @@ import { setupLogger } from '../../test/setup-logger';
 import { AliasDoesNotExistError } from '../errors/alias-does-not-exist.error';
 import { AliasAlreadyExistsError } from '../errors/alias-already-exists.error';
 import { AccountInvalidError } from '../errors/account-invalid.error';
+import set = Reflect.set;
 
 describe('AccountService', () => {
   let service: AccountService;
+  let setupError = false;
 
   beforeEach(async () => {
     setupLogger();
-    const stats = await startContainer();
+    let ldapUrl;
+    try {
+      ldapUrl = await startContainer();
+    } catch (e) {
+      winston.error(`Error starting ldap container: ${e.message}`);
+      setupError = true;
+      return;
+    }
     winston.info('Creating Testmodule');
     const module: TestingModule = await Test.createTestingModule({
       imports: [
@@ -21,12 +30,13 @@ describe('AccountService', () => {
           load: [
             () => {
               return {
-                AM_LDAP_URL: `ldap://localhost:${stats.NetworkSettings.Ports['389/tcp'][0].HostPort}/`,
+                AM_LDAP_URL: ldapUrl,
                 AM_LDAP_BIND_DN: 'cn=admin,dc=example,dc=com',
                 AM_LDAP_BIND_PW: 'admin',
                 AM_LDAP_USER_DN: 'dc=example,dc=com',
                 AM_LDAP_USER_ATTR: 'uid',
                 AM_LDAP_ALIAS_ATTR: 'registeredAddress',
+                AM_DEFAULT_PAGESIZE: '10',
               };
             },
           ],
@@ -43,18 +53,23 @@ describe('AccountService', () => {
   });
 
   it('should be defined', () => {
+    expect(setupError).toBeFalsy();
     expect(service).toBeDefined();
   });
 
   it('should return all aliases', async () => {
+    expect(setupError).toBeFalsy();
     const aliases = await service.getAliases('user');
-    expect(aliases).toHaveLength(1);
-    expect(aliases[0]).toStrictEqual({
-      address: 'alias1.user@example.com',
+    expect(aliases).toStrictEqual({
+      pageSize: 10,
+      page: 1,
+      total: 1,
+      results: [{ address: 'alias1.user@example.com' }],
     });
   });
 
   it('should throw when giving a non existent user', async () => {
+    expect(setupError).toBeFalsy();
     try {
       await service.getAliases('unknown');
     } catch (e) {
@@ -63,8 +78,9 @@ describe('AccountService', () => {
   });
 
   it('should create a new alias', async () => {
+    expect(setupError).toBeFalsy();
     let aliases = await service.getAliases('user');
-    expect(aliases).toHaveLength(1);
+    expect(aliases.total).toEqual(1);
     const newAlias = await service.createAlias('user', {
       address: 'alias2.user@example.com',
     });
@@ -73,15 +89,16 @@ describe('AccountService', () => {
       address: 'alias2.user@example.com',
     });
     aliases = await service.getAliases('user');
-    expect(aliases).toHaveLength(2);
-    expect(aliases[1]).toStrictEqual({
+    expect(aliases.total).toEqual(2);
+    expect(aliases.results[1]).toStrictEqual({
       address: 'alias2.user@example.com',
     });
   });
 
   it('should update an alias', async () => {
+    expect(setupError).toBeFalsy();
     let aliases = await service.getAliases('user');
-    expect(aliases).toHaveLength(1);
+    expect(aliases.total).toEqual(1);
     const updatedAlias = await service.updateAlias(
       'user',
       'alias1.user@example.com',
@@ -94,21 +111,23 @@ describe('AccountService', () => {
       address: 'alias2.user@example.com',
     });
     aliases = await service.getAliases('user');
-    expect(aliases).toHaveLength(1);
-    expect(aliases[0]).toStrictEqual({
+    expect(aliases.total).toEqual(1);
+    expect(aliases.results[0]).toStrictEqual({
       address: 'alias2.user@example.com',
     });
   });
 
   it('should delete an alias', async () => {
+    expect(setupError).toBeFalsy();
     let aliases = await service.getAliases('user');
-    expect(aliases).toHaveLength(1);
+    expect(aliases.total).toEqual(1);
     await service.deleteAlias('user', 'alias1.user@example.com');
     aliases = await service.getAliases('user');
-    expect(aliases).toHaveLength(0);
+    expect(aliases.total).toEqual(0);
   });
 
   it('should refuse adding an already existing alias', async () => {
+    expect(setupError).toBeFalsy();
     try {
       await service.createAlias('user', {
         address: 'alias1.user@example.com',
@@ -119,6 +138,7 @@ describe('AccountService', () => {
   });
 
   it('should refuse changing an alias that does not exist', async () => {
+    expect(setupError).toBeFalsy();
     try {
       await service.updateAlias('user', 'notexists@example.com', {
         address: 'alias1.user@example.com',
@@ -129,6 +149,7 @@ describe('AccountService', () => {
   });
 
   it('should refuse changing an alias to an alias that already exists', async () => {
+    expect(setupError).toBeFalsy();
     try {
       await service.updateAlias('user', 'alias1.user@example.com', {
         address: 'alias1.user@example.com',
@@ -139,6 +160,7 @@ describe('AccountService', () => {
   });
 
   it('should refuse deleting an alias that does not exist', async () => {
+    expect(setupError).toBeFalsy();
     try {
       await service.deleteAlias('user', 'notexists@example.com');
     } catch (e) {

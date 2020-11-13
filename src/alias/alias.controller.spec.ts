@@ -9,15 +9,24 @@ import * as request from 'supertest';
 import { SuperTest, Test as SuperTestTest } from 'supertest';
 import { INestApplication } from '@nestjs/common';
 import { AccountModule } from '../account/account.module';
+import * as winston from 'winston';
 
 describe('The Alias Controller', () => {
   let controller: AliasController;
   let token: string;
   let app: INestApplication;
+  let setupError = false;
 
   beforeEach(async () => {
     setupLogger();
-    const stats = await startContainer();
+    let ldapUrl;
+    try {
+      ldapUrl = await startContainer();
+    } catch (e) {
+      winston.error(`Error starting ldap container: ${e.message}`);
+      setupError = true;
+      return;
+    }
     const module: TestingModule = await Test.createTestingModule({
       controllers: [AliasController],
       imports: [
@@ -25,7 +34,7 @@ describe('The Alias Controller', () => {
           load: [
             () => {
               return {
-                AM_LDAP_URL: `ldap://localhost:${stats.NetworkSettings.Ports['389/tcp'][0].HostPort}/`,
+                AM_LDAP_URL: ldapUrl,
                 AM_LDAP_BIND_DN: 'cn=admin,dc=example,dc=com',
                 AM_LDAP_BIND_PW: 'admin',
                 AM_LDAP_USER_DN: 'dc=example,dc=com',
@@ -61,6 +70,7 @@ describe('The Alias Controller', () => {
   });
 
   it('should be defined', () => {
+    expect(setupError).toBeFalsy();
     expect(controller).toBeDefined();
   });
 
@@ -77,6 +87,7 @@ describe('The Alias Controller', () => {
       authenticatorFuncion = test => test;
     }
     it('should get all aliases', () => {
+      expect(setupError).toBeFalsy();
       return authenticatorFuncion(tester().get('/api/account/alias'))
         .expect(200)
         .expect({
@@ -88,6 +99,7 @@ describe('The Alias Controller', () => {
     });
 
     it('should filter for aliases', () => {
+      expect(setupError).toBeFalsy();
       return authenticatorFuncion(
         tester()
           .get('/api/account/alias')
@@ -103,6 +115,7 @@ describe('The Alias Controller', () => {
     });
 
     it('should receive no results for an invalid filter', () => {
+      expect(setupError).toBeFalsy();
       return authenticatorFuncion(
         tester()
           .get('/api/account/alias')
@@ -118,6 +131,7 @@ describe('The Alias Controller', () => {
     });
 
     it('should add a new alias', () => {
+      expect(setupError).toBeFalsy();
       return authenticatorFuncion(tester().post('/api/account/alias'))
         .send({
           address: 'alias2.user@example.com',
@@ -129,6 +143,7 @@ describe('The Alias Controller', () => {
     });
 
     it('should reject adding an existing alias', () => {
+      expect(setupError).toBeFalsy();
       return authenticatorFuncion(tester().post('/api/account/alias'))
         .send({
           address: 'alias1.user@example.com',
@@ -143,6 +158,7 @@ describe('The Alias Controller', () => {
     });
 
     it('should update an alias', () => {
+      expect(setupError).toBeFalsy();
       return authenticatorFuncion(
         tester().put('/api/account/alias/alias1.user@example.com'),
       )
@@ -156,6 +172,7 @@ describe('The Alias Controller', () => {
     });
 
     it('should refuse updating an alias that does not exist', () => {
+      expect(setupError).toBeFalsy();
       return authenticatorFuncion(
         tester().put('/api/account/alias/nothing@example.com'),
       )
@@ -166,6 +183,7 @@ describe('The Alias Controller', () => {
     });
 
     it('should refuse updating an alias to an alias that already exists', () => {
+      expect(setupError).toBeFalsy();
       return authenticatorFuncion(
         tester().put('/api/account/alias/alias1.user@example.com'),
       )
@@ -176,12 +194,14 @@ describe('The Alias Controller', () => {
     });
 
     it('should delete an alias', () => {
+      expect(setupError).toBeFalsy();
       return authenticatorFuncion(
         tester().delete('/api/account/alias/alias1.user@example.com'),
       ).expect(204);
     });
 
     it('should refuse deleting an alias that does not exist', () => {
+      expect(setupError).toBeFalsy();
       return authenticatorFuncion(
         tester().delete('/api/account/alias/nothing@example.com'),
       ).expect(404);

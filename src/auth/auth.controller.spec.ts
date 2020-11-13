@@ -7,15 +7,24 @@ import * as request from 'supertest';
 import { JwtService } from '@nestjs/jwt';
 import { AuthModule } from './auth.module';
 import { AuthController } from './auth.controller';
+import * as winston from 'winston';
 
 describe('Auth Controller', () => {
   let controller: AuthController;
   let app: INestApplication;
   let module: TestingModule;
+  let setupError = false;
 
   beforeEach(async () => {
     setupLogger();
-    const stats = await startContainer();
+    let ldapUrl;
+    try {
+      ldapUrl = await startContainer();
+    } catch (e) {
+      winston.error(`Error starting ldap container: ${e.message}`);
+      setupError = true;
+      return;
+    }
     module = await Test.createTestingModule({
       controllers: [AuthController],
       imports: [
@@ -23,7 +32,7 @@ describe('Auth Controller', () => {
           load: [
             () => {
               return {
-                AM_LDAP_URL: `ldap://localhost:${stats.NetworkSettings.Ports['389/tcp'][0].HostPort}/`,
+                AM_LDAP_URL: ldapUrl,
                 AM_LDAP_BIND_DN: 'cn=admin,dc=example,dc=com',
                 AM_LDAP_BIND_PW: 'admin',
                 AM_LDAP_USER_DN: 'dc=example,dc=com',
@@ -52,10 +61,12 @@ describe('Auth Controller', () => {
   });
 
   it('should be defined', () => {
+    expect(setupError).toBeFalsy();
     expect(controller).toBeDefined();
   });
 
   it('should return a JWT token and a httponly cookie', () => {
+    expect(setupError).toBeFalsy();
     return request(app.getHttpServer())
       .get('/api/auth/login')
       .auth('user', 'password')
@@ -79,6 +90,7 @@ describe('Auth Controller', () => {
   });
 
   it('should throw on wrong credentials', () => {
+    expect(setupError).toBeFalsy();
     return request(app.getHttpServer())
       .get('/api/auth/login')
       .auth('user', 'wrong')
@@ -86,6 +98,7 @@ describe('Auth Controller', () => {
   });
 
   it('should remove the cookie when logging out', async () => {
+    expect(setupError).toBeFalsy();
     const agent = await request.agent(app.getHttpServer());
 
     await agent

@@ -1,0 +1,18 @@
+version: "3"
+services:
+    sut:
+        build:
+            context: .
+            dockerfile: Test.Dockerfile
+        command:
+            - sh
+            - -c
+            - "cp test/seed.ldif /ldapseed && npm run-script test:sequential"
+        environment:
+            - "TEST_IN_CONTAINER=true"
+        volumes:
+            - "/var/run/docker.sock:/var/run/docker.sock"
+            - "ldapseed:/ldapseed"
+volumes:
+    ldapseed:
+
