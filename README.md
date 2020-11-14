@@ -16,9 +16,9 @@ This repository holds the API-Server for the Aliasmanager based on
 The frontend based on [Vuejs](https://vuejs.org) can be found at
 https://github.com/dploeger/aliasmanager-client.
 
-The API-Server mostly consists of a login endpoint, that generates
-a JWT token and an account endpoint that provides CRUD operations
-for the specific aliases.
+The API-Server mostly consists of an authentication endpoint, that 
+generates a JWT token and an account endpoint that provides CRUD 
+operations for the specific aliases.
 
 It requires a connection to an existing LDAP-Server that it can 
 manage.
@@ -50,6 +50,9 @@ following variables are supported:
 * AM_LDAP_USER_DN: The base dn where to find user accounts
 * AM_LDAP_USER_ATTR: The attribute identifiying a user [uid]
 * AM_LDAP_ALIAS_ATTR:  The attribute that should be used for aliases [registeredAddress]
+* AM_TOKEN_COOKIE: The cookie used to store the JWT token [AM-Token]
+* AM_TOKEN_MAXAGE: The maximum age of the cookie in ms [1800000]
+* AM_DEFAULT_PAGESIZE: The default pagination page size when returning aliases [5]
 
 ## Usage
 
@@ -92,14 +95,14 @@ If you want to contribute to this project, that is awesome!
 Please create an issue for the project first describing the bug
 you found or the feature youd like to implement.
 
-If youre up for it, create a pull request after that.
+If you're up for it, create a pull request after that.
 
 This project aims to be fully tested and includes unit and e2e-tests
 in jest/supertest formats (check out the _spec.ts files).
 
 So please work in a test driven development way by 
 adding a test to the respective test suite first showing the bug 
-or feature youd like to solve/implement and run the test suite. 
+or feature you'd like to solve/implement and run the test suite. 
 
 The test should fail.
 

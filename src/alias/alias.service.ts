@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { Alias } from '../alias/alias';
+import { Alias } from '../schemas/alias';
 import { Attribute, Change, Client } from 'ldapts';
 import { AccountInvalidError } from '../errors/account-invalid.error';
 import { Entry } from 'ldapts/messages';
@@ -8,13 +8,13 @@ import { Configuration } from '../configuration';
 import * as winston from 'winston';
 import { AliasAlreadyExistsError } from '../errors/alias-already-exists.error';
 import { AliasDoesNotExistError } from '../errors/alias-does-not-exist.error';
-import { Results } from '../alias/results';
+import { Results } from '../schemas/results';
 
 /**
  * Alias and account modification service
  */
 @Injectable()
-export class AccountService {
+export class AliasService {
   private _client: Client;
   private _configService: ConfigService;
   private _bound: boolean;

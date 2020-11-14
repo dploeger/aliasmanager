@@ -7,6 +7,9 @@ import * as winston from 'winston';
 import * as logform from 'logform';
 import { LoggerService } from './logger/logger.service';
 
+/**
+ * Bootstrap Nest server
+ */
 async function bootstrap() {
   winston.configure({
     transports: [new winston.transports.Console()],

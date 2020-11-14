@@ -5,10 +5,14 @@ import { PassportStrategy } from '@nestjs/passport';
 import { Configuration } from '../configuration';
 import { IncomingMessage } from 'http';
 
+/**
+ * A passport strategy for handling LDAP based logins
+ */
 @Injectable()
 export class LdapStrategy extends PassportStrategy(Strategy) {
   private _configService: ConfigService;
   constructor(configService: ConfigService<Configuration>) {
+    // configuring the LDAP server for authentication requests
     super({
       server: {
         url: configService.get('AM_LDAP_URL'),

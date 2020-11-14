@@ -8,7 +8,7 @@ import { AuthModule } from '../auth/auth.module';
 import * as request from 'supertest';
 import { SuperTest, Test as SuperTestTest } from 'supertest';
 import { INestApplication } from '@nestjs/common';
-import { AccountModule } from '../account/account.module';
+import { AliasModule } from './alias.module';
 import * as winston from 'winston';
 
 describe('The Alias Controller', () => {
@@ -50,7 +50,7 @@ describe('The Alias Controller', () => {
           ],
         }),
         AuthModule,
-        AccountModule,
+        AliasModule,
       ],
     }).compile();
 

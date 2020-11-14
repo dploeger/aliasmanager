@@ -1,6 +1,9 @@
-import { Alias } from '../alias/alias';
+import { Alias } from '../schemas/alias';
 import * as winston from 'winston';
 
+/**
+ * The specified alias to be created or updated already exists
+ */
 export class AliasAlreadyExistsError extends Error {
   public static readonly NAME = 'AliasAlreadyExistsError';
 

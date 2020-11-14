@@ -1,13 +1,16 @@
 import { IsDefined, IsNotEmpty, IsString } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
-export abstract class Alias {
+/**
+ * The token model
+ */
+export abstract class Token {
   @IsDefined()
   @IsString()
   @IsNotEmpty()
   @ApiProperty({
-    description: 'The e-mail address of the alias',
-    example: 'alias1.example@example.com',
+    example: 'someverylongencryptedstring',
+    description: 'The signed JWT token',
   })
-  address: string;
+  token: string;
 }

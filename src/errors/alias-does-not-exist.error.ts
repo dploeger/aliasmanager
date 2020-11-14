@@ -1,5 +1,8 @@
 import * as winston from 'winston';
 
+/**
+ * The specified alias to be updated or deleted does not exist
+ */
 export class AliasDoesNotExistError extends Error {
   public static readonly NAME = 'AliasDoesNotExistError';
 

@@ -6,10 +6,14 @@ import { Configuration } from '../configuration';
 import { IncomingMessage } from 'http';
 import { parse } from 'cookie';
 
+/**
+ * A passport strategy for handling JWTs
+ */
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor(configService: ConfigService<Configuration>) {
     super({
+      // extract tokens from either the cookie or bearer request
       jwtFromRequest: ExtractJwt.fromExtractors([
         (req: IncomingMessage) => {
           if ('cookie' in req.headers) {
@@ -26,6 +30,10 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     });
   }
 
+  /**
+   * Extract neccessary information from the JWT payload
+   * @param payload the JWT payload
+   */
   async validate(payload: any) {
     return { username: payload.username };
   }

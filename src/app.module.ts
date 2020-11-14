@@ -1,13 +1,17 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { AuthModule } from './auth/auth.module';
-import { AccountModule } from './account/account.module';
+import { AliasModule } from './alias/alias.module';
 import * as Joi from '@hapi/joi';
 import { AliasController } from './alias/alias.controller';
 import { LoggerService } from './logger/logger.service';
 
+/**
+ * The basic Nest app module
+ */
 @Module({
   imports: [
+    // Configuration and validation of the configuration module
     ConfigModule.forRoot({
       validationSchema: Joi.object({
         AM_PORT: Joi.number()
@@ -33,7 +37,7 @@ import { LoggerService } from './logger/logger.service';
       }),
     }),
     AuthModule,
-    AccountModule,
+    AliasModule,
   ],
   controllers: [AliasController],
   providers: [LoggerService],

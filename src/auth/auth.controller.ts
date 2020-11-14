@@ -8,13 +8,16 @@ import {
   ApiOkResponse,
   ApiOperation,
 } from '@nestjs/swagger';
-import { Token } from '../token/token';
-import { Error } from '../errors/error';
+import { Token } from '../schemas/token';
+import { Error } from '../schemas/error';
 import { AuthService } from './auth.service';
 import { Request, Response } from 'express';
 import { ConfigService } from '@nestjs/config';
 import { JwtAuthGuard } from './jwt-auth.guard';
 
+/**
+ * A controller handling authentication requests
+ */
 @Controller('api/auth')
 export class AuthController {
   constructor(

@@ -1,6 +1,9 @@
 import { IsArray, IsDefined, IsNotEmpty, IsNumber } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
+/**
+ * The result set schema
+ */
 export abstract class Results<T> {
   @IsDefined()
   @IsNumber()

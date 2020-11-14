@@ -15,7 +15,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
-import { Alias } from './alias';
+import { Alias } from '../schemas/alias';
 import {
   ApiBadRequestResponse,
   ApiBearerAuth,
@@ -33,15 +33,18 @@ import {
 } from '@nestjs/swagger';
 import { AliasAlreadyExistsError } from '../errors/alias-already-exists.error';
 import { AliasDoesNotExistError } from '../errors/alias-does-not-exist.error';
-import { AccountService } from '../account/account.service';
+import { AliasService } from './alias.service';
 import { Request } from 'express';
 import { AccountInvalidError } from '../errors/account-invalid.error';
-import { Error } from '../errors/error';
-import { Results } from './results';
+import { Error } from '../schemas/error';
+import { Results } from '../schemas/results';
 
+/**
+ * A controller handling alias requests
+ */
 @Controller('api/account/alias')
 export class AliasController {
-  constructor(private accountService: AccountService) {}
+  constructor(private accountService: AliasService) {}
 
   @Get()
   @ApiBearerAuth()

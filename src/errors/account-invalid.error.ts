@@ -1,5 +1,8 @@
 import * as winston from 'winston';
 
+/**
+ * The specified account is invalid or can not be found
+ */
 export class AccountInvalidError extends Error {
   public static readonly NAME = 'AccountInvalidError';
 

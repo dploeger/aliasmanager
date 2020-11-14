@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { AccountService } from './account.service';
+import { AliasService } from './alias.service';
 import { ConfigModule } from '@nestjs/config';
 import { startContainer, stopContainer } from '../../test/docker-ldap';
 import * as winston from 'winston';
@@ -10,7 +10,7 @@ import { AccountInvalidError } from '../errors/account-invalid.error';
 import set = Reflect.set;
 
 describe('AccountService', () => {
-  let service: AccountService;
+  let service: AliasService;
   let setupError = false;
 
   beforeEach(async () => {
@@ -42,10 +42,10 @@ describe('AccountService', () => {
           ],
         }),
       ],
-      providers: [AccountService],
+      providers: [AliasService],
     }).compile();
 
-    service = module.get<AccountService>(AccountService);
+    service = module.get<AliasService>(AliasService);
   });
 
   afterEach(async () => {
