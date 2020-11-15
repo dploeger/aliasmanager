@@ -130,6 +130,37 @@ describe('The Alias Controller', () => {
         });
     });
 
+    it('should receive results of other pages', async () => {
+      expect(setupError).toBeFalsy();
+      await authenticatorFuncion(tester().post('/api/account/alias')).send({
+        address: 'alias2.user@example.com',
+      });
+      await authenticatorFuncion(
+        tester()
+          .get('/api/account/alias')
+          .query('pageSize=1&page=1'),
+      )
+        .expect(200)
+        .expect({
+          pageSize: 1,
+          page: 1,
+          total: 2,
+          results: [{ address: 'alias1.user@example.com' }],
+        });
+      return authenticatorFuncion(
+        tester()
+          .get('/api/account/alias')
+          .query('pageSize=1&page=2'),
+      )
+        .expect(200)
+        .expect({
+          pageSize: 1,
+          page: 2,
+          total: 2,
+          results: [{ address: 'alias2.user@example.com' }],
+        });
+    });
+
     it('should add a new alias', () => {
       expect(setupError).toBeFalsy();
       return authenticatorFuncion(tester().post('/api/account/alias'))

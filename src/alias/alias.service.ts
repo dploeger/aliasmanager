@@ -83,6 +83,7 @@ export class AliasService {
     if (!pageSize) {
       pageSize = parseInt(this._configService.get('AM_DEFAULT_PAGESIZE'));
     }
+    winston.debug(`Searching for alias with filter "${filter}"`);
     const account = await this._getAccount(username);
     let aliases = account[this._configService.get('AM_LDAP_ALIAS_ATTR')] as
       | string
@@ -104,6 +105,9 @@ export class AliasService {
         return { address: alias };
       });
 
+    winston.debug(
+      `Returning page ${page} of ${results.length} results with a page size of ${pageSize}`,
+    );
     return {
       pageSize: pageSize,
       page: page,

@@ -66,6 +66,16 @@ export class AliasController {
     description: 'A filter value to match aliases to',
     required: false,
   })
+  @ApiQuery({
+    name: 'page',
+    description: 'The current result page to fetch',
+    required: false,
+  })
+  @ApiQuery({
+    name: 'pageSize',
+    description: 'The number of results per page',
+    required: false,
+  })
   @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: 'Fetch all aliases or a filtered list' })
   async getAliases(
@@ -73,9 +83,13 @@ export class AliasController {
     @Req() request: Request,
   ): Promise<Results<Alias>> {
     try {
+      const page: number = parseInt(request.query.page as string);
+      const pageSize: number = parseInt(request.query.pageSize as string);
       return await this.accountService.getAliases(
         (request.user as any).username,
         request.query.filter as string,
+        isNaN(page) ? 1 : page,
+        isNaN(pageSize) ? null : pageSize,
       );
     } catch (e) {
       /* istanbul ignore next */
