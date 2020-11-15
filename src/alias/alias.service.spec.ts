@@ -68,6 +68,23 @@ describe('AccountService', () => {
     });
   });
 
+  it('should return all aliases sorted', async () => {
+    expect(setupError).toBeFalsy();
+    await service.createAlias('user', { address: 'alias3.user@example.com' });
+    await service.createAlias('user', { address: 'alias2.user@example.com' });
+    const aliases = await service.getAliases('user');
+    expect(aliases).toStrictEqual({
+      pageSize: 10,
+      page: 1,
+      total: 3,
+      results: [
+        { address: 'alias1.user@example.com' },
+        { address: 'alias2.user@example.com' },
+        { address: 'alias3.user@example.com' },
+      ],
+    });
+  });
+
   it('should throw when giving a non existent user', async () => {
     expect(setupError).toBeFalsy();
     try {

@@ -100,6 +100,9 @@ export class AliasService {
       aliases = [aliases];
     }
     const results = aliases
+      .sort((a, b): number => {
+        return ('' + a).localeCompare(b);
+      })
       .filter(alias => alias.match(new RegExp(`^.*${filter}.*$`)))
       .map(alias => {
         return { address: alias };
