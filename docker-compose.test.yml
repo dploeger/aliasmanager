@@ -1,5 +1,7 @@
 version: "3"
 services:
+    tmpldap:
+        image: "osixia/openldap:1.4.0"
     sut:
         build:
             context: .
