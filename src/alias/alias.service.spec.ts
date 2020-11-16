@@ -134,6 +134,22 @@ describe('AccountService', () => {
     });
   });
 
+  it('should update an alias that has something in common with another alias', async () => {
+    expect(setupError).toBeFalsy();
+    await service.createAlias('user', { address: 'salias2.user@example.com' });
+    const updatedAlias = await service.updateAlias(
+      'user',
+      'alias1.user@example.com',
+      {
+        address: 'alias2.user@example.com',
+      },
+    );
+    expect(updatedAlias).not.toBeNull();
+    expect(updatedAlias).toStrictEqual({
+      address: 'alias2.user@example.com',
+    });
+  });
+
   it('should delete an alias', async () => {
     expect(setupError).toBeFalsy();
     let aliases = await service.getAliases('user');

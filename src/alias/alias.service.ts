@@ -79,6 +79,7 @@ export class AliasService {
     filter = '',
     page = 1,
     pageSize = null,
+    strict = false,
   ): Promise<Results<Alias>> {
     if (!pageSize) {
       pageSize = parseInt(this._configService.get('AM_DEFAULT_PAGESIZE'));
@@ -103,7 +104,13 @@ export class AliasService {
       .sort((a, b): number => {
         return ('' + a).localeCompare(b);
       })
-      .filter(alias => alias.match(new RegExp(`^.*${filter}.*$`)))
+      .filter(alias => {
+        if (strict) {
+          return alias === filter;
+        } else {
+          return alias.match(new RegExp(`^.*${filter}.*$`));
+        }
+      })
       .map(alias => {
         return { address: alias };
       });
@@ -127,7 +134,9 @@ export class AliasService {
   async createAlias(username: string, alias: Alias): Promise<Alias> {
     winston.info(`Adding ${alias.address} to user ${username}`);
     winston.info('Checking for duplicates');
-    if ((await this.getAliases(username, alias.address)).total > 0) {
+    if (
+      (await this.getAliases(username, alias.address, 1, null, true)).total > 0
+    ) {
       throw new AliasAlreadyExistsError(username, alias);
     }
     const account = await this._getAccount(username);
@@ -162,10 +171,13 @@ export class AliasService {
       `Changing ${address} to ${newAlias.address} for user ${username}`,
     );
     winston.info('Getting existing aliases');
-    if ((await this.getAliases(username, address)).total === 0) {
+    if ((await this.getAliases(username, address, 1, null, true)).total === 0) {
       throw new AliasDoesNotExistError(username, address);
     }
-    if ((await this.getAliases(username, newAlias.address)).total === 1) {
+    if (
+      (await this.getAliases(username, newAlias.address, 1, null, true))
+        .total === 1
+    ) {
       throw new AliasAlreadyExistsError(username, newAlias);
     }
     const account = await this._getAccount(username);
@@ -199,7 +211,7 @@ export class AliasService {
    */
   async deleteAlias(username: string, address: string): Promise<void> {
     winston.info(`Deleting ${address} from user ${username}`);
-    if ((await this.getAliases(username, address)).total == 0) {
+    if ((await this.getAliases(username, address, 1, null, true)).total == 0) {
       throw new AliasDoesNotExistError(username, address);
     }
 
