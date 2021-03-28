@@ -17,7 +17,6 @@ import { Results } from '../schemas/results';
 export class AliasService {
   private _client: Client;
   private _configService: ConfigService;
-  private _bound: boolean;
 
   constructor(private configService: ConfigService<Configuration>) {
     this._configService = configService;
@@ -33,15 +32,9 @@ export class AliasService {
    * @private
    */
   private async _bind() {
-    if (!this._bound) {
-      const bindDn = this.configService.get('AM_LDAP_BIND_DN');
-      winston.info(`Binding to ldap service with dn ${bindDn}`);
-      await this._client.bind(
-        bindDn,
-        this.configService.get('AM_LDAP_BIND_PW'),
-      );
-      this._bound = true;
-    }
+    const bindDn = this.configService.get('AM_LDAP_BIND_DN');
+    winston.info(`Binding to ldap service with dn ${bindDn}`);
+    await this._client.bind(bindDn, this.configService.get('AM_LDAP_BIND_PW'));
   }
 
   /**
